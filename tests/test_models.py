@@ -2,6 +2,7 @@ import pytest
 from django.apps import apps
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError
+
 from django_offline_auth.models import OfflineAuth
 
 pytestmark = pytest.mark.django_db
