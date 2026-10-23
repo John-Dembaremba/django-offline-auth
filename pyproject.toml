@@ -27,6 +27,15 @@ dev = [
     "ruff>=0.16",
 ]
 
+[tool.ruff]
+exclude = [
+    "**/migrations/*.py",
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
 [tool.setuptools.packages.find]
 where = ["src"]
 
