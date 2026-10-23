@@ -2,9 +2,19 @@
 
 Reusable Django package for securely issuing offline authentication credentials to mobile applications.
 
-The package is intentionally **user-centric and device-agnostic on the Django side**. It does not store device IDs, device names, IMEI numbers, asset relationships, or Android private keys.
+The package is intentionally **user-centric and device-agnostic on the Django side**.
 
-The host Django application decides which users are eligible for offline authentication, while this package securely prepares and encrypts their offline credentials.
+It does not store:
+
+- device IDs;
+- device names;
+- IMEI numbers;
+- asset relationships;
+- Android private keys.
+
+The host Django application decides which users are eligible for offline authentication.
+
+`django-offline-auth` securely prepares and encrypts their offline credentials.
 
 ## Architecture
 
@@ -24,7 +34,9 @@ Android Application
 Offline Authentication
 ```
 
-The backend is user-centric, while Android protects downloaded credentials using an installation-local private key stored in Android Keystore.
+The backend is user-centric.
+
+The Android application protects downloaded credentials using an installation-local private key stored in Android Keystore.
 
 ## Main Flow
 
@@ -35,15 +47,17 @@ User logs in normally
         ↓
 Django returns JWT
         ↓
-Host app determines eligible offline users
+Host application determines eligible offline users
         ↓
 Android sends its public key
         ↓
-django-offline-auth reads each user's current Django password verifier
+django-offline-auth reads each user's
+current Django password verifier
         ↓
 Credential payload is encrypted
         ↓
-Encrypted credentials are downloaded and stored locally
+Encrypted credentials are downloaded
+and stored locally
 
 
 OFFLINE
@@ -54,7 +68,8 @@ Android finds that user's downloaded credential
         ↓
 Android Keystore private key decrypts the credential
         ↓
-Django password verifier is recovered in native code
+Django password verifier is recovered
+inside native code
         ↓
 PBKDF2 verification runs locally
         ↓
@@ -93,29 +108,17 @@ Offline credentials:
 - expire after a configurable period, initially 24 hours;
 - are refreshed when the application successfully synchronizes online.
 
-If a password changes while a device is offline, the old cached credential may remain valid until the next sync or expiry.
+If a password changes while a client is offline, the old cached credential may remain valid until the next sync or expiry.
 
 ## Synchronization
 
-The host application supplies the users that should be available offline.
+The host application determines which users should be available offline.
 
-For example:
+`django-offline-auth` does not know or care how those users were selected.
 
-```text
-Logged-in User
-      ↓
-UserProfile
-      ↓
-Cost Centre
-      ↓
-Eligible Users
-```
+The synchronization response is treated as the authoritative offline-user snapshot.
 
-`django-offline-auth` does not know about `UserProfile`, `CostCenter`, `Asset`, or other application-specific models.
-
-The server response is treated as the authoritative offline-user snapshot.
-
-If a previously cached user is missing from the latest sync, Android should remove that user's offline credential.
+If a previously cached user is missing from the latest sync, the mobile application should remove that user's offline credential.
 
 ## Security Rules
 
@@ -148,8 +151,6 @@ The host application is responsible for:
 ```text
 which users are eligible
 business rules
-cost centres
-assets
 permissions
 API integration
 ```
