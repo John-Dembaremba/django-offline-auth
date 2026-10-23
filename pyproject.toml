@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "django-offline-auth"
+version = "0.1.0"
+description = "Reusable offline authentication support for Django applications."
+readme = "README.md"
+requires-python = ">=3.13"
+license = { text = "MIT" }
+
+authors = [
+    { name = "John Dembaremba" }
+]
+
+dependencies = [
+    "Django>=5.2",
+    "cryptography>=43.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=9.0",
+    "pytest-django>=4.13",
+    "ruff>=0.16",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "tests.settings"
+pythonpath = [
+    "src",
+    ".",
+]
+testpaths = [
+    "tests",
+]
