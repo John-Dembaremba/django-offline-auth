@@ -1,7 +1,3 @@
-Your current README already establishes the two most important principles: the package is intentionally **device-agnostic on Django**, and the host application decides which users are eligible for offline authentication. README(5) It also states that Android protects downloaded credentials with an installation-local private key stored in Android Keystore. README(5)
-
-I’d expand it into this so a new developer can understand the problem, boundaries, security rules, and full online/offline flow before touching the code.
-
 # django-offline-auth
 
 Reusable offline authentication support for Django applications.
