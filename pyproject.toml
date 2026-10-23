@@ -23,6 +23,7 @@ dependencies = [
 dev = [
     "pytest>=9.0",
     "pytest-django>=4.13",
+    "pytest-cov>=6.0",
     "ruff>=0.16",
 ]
 
@@ -38,3 +39,20 @@ pythonpath = [
 testpaths = [
     "tests",
 ]
+
+[tool.coverage.run]
+source = [
+    "django_offline_auth",
+]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+fail_under = 80
+
+[tool.coverage.html]
+directory = "htmlcov"
+
+[tool.coverage.xml]
+output = "coverage.xml"
