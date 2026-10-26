@@ -62,7 +62,9 @@ def test_payload_requires_positive_credential_version():
 
 def test_payload_requires_timezone_aware_timestamp():
     with pytest.raises(ValidationError):
-        make_payload(issued_at=datetime(2026, 10, 26, 10, 0, tzinfo=UTC))
+        make_payload(
+            issued_at="2026-10-26T10:00:00",
+        )
 
 
 def test_payload_expiry_must_be_after_issue_time():

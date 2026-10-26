@@ -20,7 +20,7 @@ class OfflineCredentialPayload(BaseModel):
     @classmethod
     def validate_timezone(cls, value: datetime) -> datetime:
         """Require timezone-aware timestamps."""
-        if value.tzinfo is None:
+        if value.tzinfo is None or value.utcoffset() is None:
             raise ValueError("timestamp must be timezone-aware")
 
         return value
