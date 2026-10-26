@@ -1,86 +1,84 @@
-import json
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
-from django_offline_auth.protocol.payloads import OfflineCredentialPayload
+import pytest
+from pydantic import ValidationError
+
+from django_offline_auth.protocol.payloads import (
+    OfflineCredentialPayload,
+)
 
 
-def test_offline_credential_payload_to_dict():
+def make_payload(**overrides):
     issued_at = datetime(
         2026,
         10,
-        23,
-        8,
-        30,
-        tzinfo=UTC,
-    )
-
-    expires_at = datetime(
-        2026,
+        26,
         10,
-        24,
-        8,
-        30,
+        0,
         tzinfo=UTC,
     )
 
-    payload = OfflineCredentialPayload(
-        protocol_version=1,
-        user_id="42",
-        username="mary",
-        verifier="pbkdf2_sha256$1000000$salt$hash",
-        issued_at=issued_at,
-        expires_at=expires_at,
-        credential_version=1,
-    )
-
-    result = payload.to_dict()
-
-    assert result == {
+    values = {
         "protocol_version": 1,
         "user_id": "42",
         "username": "mary",
         "verifier": "pbkdf2_sha256$1000000$salt$hash",
-        "issued_at": issued_at.isoformat(),
-        "expires_at": expires_at.isoformat(),
+        "issued_at": issued_at,
+        "expires_at": issued_at + timedelta(hours=24),
         "credential_version": 1,
     }
 
+    values.update(overrides)
 
-def test_offline_credential_payload_to_bytes():
+    return OfflineCredentialPayload(**values)
+
+
+def test_payload_is_valid():
+    payload = make_payload()
+
+    assert payload.username == "mary"
+    assert payload.protocol_version == 1
+
+
+def test_payload_requires_username():
+    with pytest.raises(ValidationError):
+        make_payload(username="")
+
+
+def test_payload_requires_verifier():
+    with pytest.raises(ValidationError):
+        make_payload(verifier="")
+
+
+def test_payload_requires_positive_protocol_version():
+    with pytest.raises(ValidationError):
+        make_payload(protocol_version=0)
+
+
+def test_payload_requires_positive_credential_version():
+    with pytest.raises(ValidationError):
+        make_payload(credential_version=0)
+
+
+def test_payload_requires_timezone_aware_timestamp():
+    with pytest.raises(ValidationError):
+        make_payload(
+            issued_at="2026-10-26T10:00:00",
+        )
+
+
+def test_payload_expiry_must_be_after_issue_time():
     issued_at = datetime(
         2026,
         10,
-        23,
-        8,
-        30,
-        tzinfo=UTC,
-    )
-
-    expires_at = datetime(
-        2026,
+        26,
         10,
-        24,
-        8,
-        30,
+        0,
         tzinfo=UTC,
     )
 
-    payload = OfflineCredentialPayload(
-        protocol_version=1,
-        user_id="42",
-        username="mary",
-        verifier="pbkdf2_sha256$1000000$salt$hash",
-        issued_at=issued_at,
-        expires_at=expires_at,
-        credential_version=1,
-    )
-
-    result = payload.to_bytes()
-
-    decoded = json.loads(result.decode("utf-8"))
-
-    assert decoded["protocol_version"] == 1
-    assert decoded["user_id"] == "42"
-    assert decoded["username"] == "mary"
-    assert decoded["verifier"] == ("pbkdf2_sha256$1000000$salt$hash")
-    assert decoded["credential_version"] == 1
+    with pytest.raises(ValidationError):
+        make_payload(
+            issued_at=issued_at,
+            expires_at=issued_at,
+        )
