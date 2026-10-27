@@ -36,3 +36,13 @@ class OfflineCredentialPayload(BaseModel):
     def to_bytes(self) -> bytes:
         """Return the payload as UTF-8 JSON bytes for encryption."""
         return self.model_dump_json().encode("utf-8")
+
+
+class EncryptedCredentialEnvelope(BaseModel):
+    """Encrypted credential payload sent to the client."""
+
+    key_algorithm: str
+    content_algorithm: str
+    encrypted_key: str
+    nonce: str
+    ciphertext: str
