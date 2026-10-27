@@ -41,8 +41,29 @@ class OfflineCredentialPayload(BaseModel):
 class EncryptedCredentialEnvelope(BaseModel):
     """Encrypted credential payload sent to the client."""
 
+    model_config = ConfigDict(frozen=True)
+
     key_algorithm: str
     content_algorithm: str
     encrypted_key: str
     nonce: str
     ciphertext: str
+
+
+class OfflineCredentialItem(BaseModel):
+    """Encrypted offline credential for one user."""
+
+    model_config = ConfigDict(frozen=True)
+
+    user_id: str
+    username: str
+    envelope: EncryptedCredentialEnvelope
+
+
+class OfflineCredentialSnapshot(BaseModel):
+    """Authoritative set of offline credentials returned to the client."""
+
+    model_config = ConfigDict(frozen=True)
+
+    protocol_version: int
+    credentials: list[OfflineCredentialItem]
