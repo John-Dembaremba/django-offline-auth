@@ -2,9 +2,14 @@ from datetime import timedelta
 
 import pytest
 from django.contrib.auth import get_user_model
+from django.contrib.auth.hashers import make_password
 
 from django_offline_auth.application.services.issue_credentials import (
     IssueOfflineCredentials,
+)
+from django_offline_auth.exceptions import CredentialGenerationError
+from django_offline_auth.infrastructure.credential_provider import (
+    DjangoPasswordCredentialProvider,
 )
 from django_offline_auth.models import OfflineAuth
 from django_offline_auth.protocol.payloads import EncryptedCredentialEnvelope
@@ -114,3 +119,23 @@ def test_issue_credentials_skips_users_without_offline_auth():
     )
 
     assert result.credentials == []
+
+
+def test_get_verifier_rejects_unsupported_algorithm():
+    User = get_user_model()
+
+    user = User.objects.create(
+        username="john",
+        password=make_password(
+            "secret123",
+            hasher="scrypt",
+        ),
+    )
+
+    provider = DjangoPasswordCredentialProvider()
+
+    with pytest.raises(
+        CredentialGenerationError,
+        match="Unsupported password algorithm",
+    ):
+        provider.get_verifier(user)
