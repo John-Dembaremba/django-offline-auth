@@ -5,6 +5,7 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding, rsa
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
+from django_offline_auth.conf import get_min_rsa_key_size
 from django_offline_auth.exceptions import InvalidPublicKeyError
 from django_offline_auth.protocol.constants import (
     CONTENT_ALGORITHM_AES_256_GCM,
@@ -73,7 +74,7 @@ class RSAOAEPEnvelopeEncryptor:
         if not isinstance(loaded_key, rsa.RSAPublicKey):
             raise InvalidPublicKeyError("Public key must be an RSA public key.")
 
-        if loaded_key.key_size < 2048:
+        if loaded_key.key_size < get_min_rsa_key_size():
             raise InvalidPublicKeyError("RSA public key must be at least 2048 bits.")
 
         return loaded_key

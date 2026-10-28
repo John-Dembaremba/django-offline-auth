@@ -5,14 +5,12 @@ from typing import Any
 from django_offline_auth.application.services.issue_credentials import (
     IssueOfflineCredentials,
 )
+from django_offline_auth.conf import get_credential_ttl
 from django_offline_auth.infrastructure.credential_provider import (
     DjangoPasswordCredentialProvider,
 )
 from django_offline_auth.infrastructure.crypto.envelope import (
     RSAOAEPEnvelopeEncryptor,
-)
-from django_offline_auth.protocol.constants import (
-    DEFAULT_CREDENTIAL_TTL_SECONDS,
 )
 from django_offline_auth.protocol.payloads import (
     OfflineCredentialSnapshot,
@@ -31,7 +29,7 @@ def issue_offline_credentials(
     Args:
         users: Django users to evaluate for offline authentication.
         public_key: Base64-encoded RSA public key from the mobile client.
-        ttl: Optional credential lifetime. Uses the default if omitted.
+        ttl: Optional credential lifetime. Uses the configured default if omitted.
 
     Returns:
         OfflineCredentialSnapshot:
@@ -56,9 +54,7 @@ def issue_offline_credentials(
         CredentialGenerationError: If a user verifier cannot be generated.
         ValidationError: If generated credential data is invalid.
     """
-    credential_ttl = ttl or timedelta(
-        seconds=DEFAULT_CREDENTIAL_TTL_SECONDS,
-    )
+    credential_ttl = ttl or get_credential_ttl()
 
     service = IssueOfflineCredentials(
         credential_provider=DjangoPasswordCredentialProvider(),
