@@ -378,3 +378,31 @@ def test_explicit_ttl_overrides_configured_ttl():
     )
 
     assert expires_at - issued_at == timedelta(minutes=30)
+
+
+def test_explicit_ttl_must_be_positive():
+    _, public_key = generate_rsa_key_pair()
+
+    with pytest.raises(
+        ValueError,
+        match="ttl must be greater than 0",
+    ):
+        issue_offline_credentials(
+            users=[],
+            public_key=public_key,
+            ttl=timedelta(0),
+        )
+
+
+def test_negative_explicit_ttl_is_rejected():
+    _, public_key = generate_rsa_key_pair()
+
+    with pytest.raises(
+        ValueError,
+        match="ttl must be greater than 0",
+    ):
+        issue_offline_credentials(
+            users=[],
+            public_key=public_key,
+            ttl=timedelta(seconds=-1),
+        )

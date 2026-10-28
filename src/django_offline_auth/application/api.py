@@ -17,6 +17,14 @@ from django_offline_auth.protocol.payloads import (
 )
 
 
+def _validate_ttl(ttl: timedelta) -> timedelta:
+    """Validate an offline credential lifetime."""
+    if ttl <= timedelta(0):
+        raise ValueError("ttl must be greater than 0.")
+
+    return ttl
+
+
 def issue_offline_credentials(
     *,
     users: Iterable[Any],
@@ -54,7 +62,7 @@ def issue_offline_credentials(
         CredentialGenerationError: If a user verifier cannot be generated.
         ValidationError: If generated credential data is invalid.
     """
-    credential_ttl = ttl or get_credential_ttl()
+    credential_ttl = _validate_ttl(ttl) if ttl is not None else get_credential_ttl()
 
     service = IssueOfflineCredentials(
         credential_provider=DjangoPasswordCredentialProvider(),
