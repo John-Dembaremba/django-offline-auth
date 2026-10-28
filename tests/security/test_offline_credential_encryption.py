@@ -406,3 +406,91 @@ def test_negative_explicit_ttl_is_rejected():
             public_key=public_key,
             ttl=timedelta(seconds=-1),
         )
+
+
+def test_disabled_user_is_not_in_snapshot():
+    User = get_user_model()
+
+    user = User.objects.create_user(
+        username="mary",
+        password="secret123",
+    )
+
+    OfflineAuth.objects.create(
+        user=user,
+        is_enabled=False,
+    )
+
+    _, public_key = generate_rsa_key_pair()
+
+    snapshot = issue_offline_credentials(
+        users=[user],
+        public_key=public_key,
+    )
+
+    assert snapshot.credentials == []
+
+
+def test_user_without_offline_auth_is_not_in_snapshot():
+    User = get_user_model()
+
+    user = User.objects.create_user(
+        username="mary",
+        password="secret123",
+    )
+
+    _, public_key = generate_rsa_key_pair()
+
+    snapshot = issue_offline_credentials(
+        users=[user],
+        public_key=public_key,
+    )
+
+    assert snapshot.credentials == []
+
+
+def test_snapshot_contains_only_enabled_users():
+    User = get_user_model()
+
+    enabled_user = User.objects.create_user(
+        username="mary",
+        password="secret123",
+    )
+
+    disabled_user = User.objects.create_user(
+        username="john",
+        password="secret123",
+    )
+
+    unconfigured_user = User.objects.create_user(
+        username="peter",
+        password="secret123",
+    )
+
+    OfflineAuth.objects.create(
+        user=enabled_user,
+        is_enabled=True,
+    )
+
+    OfflineAuth.objects.create(
+        user=disabled_user,
+        is_enabled=False,
+    )
+
+    _, public_key = generate_rsa_key_pair()
+
+    snapshot = issue_offline_credentials(
+        users=[
+            enabled_user,
+            disabled_user,
+            unconfigured_user,
+        ],
+        public_key=public_key,
+    )
+
+    assert len(snapshot.credentials) == 1
+
+    credential = snapshot.credentials[0]
+
+    assert credential.user_id == str(enabled_user.pk)
+    assert credential.username == enabled_user.username
