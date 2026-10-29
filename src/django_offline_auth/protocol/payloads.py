@@ -3,6 +3,16 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
+class OfflineCredentialFailure(BaseModel):
+    """Offline credential issuance failure for one user."""
+
+    model_config = ConfigDict(frozen=True)
+
+    user_id: str
+    username: str
+    reason: str
+
+
 class OfflineCredentialPayload(BaseModel):
     """Plaintext offline credential payload before encryption."""
 
@@ -67,3 +77,4 @@ class OfflineCredentialSnapshot(BaseModel):
 
     protocol_version: int
     credentials: list[OfflineCredentialItem]
+    failures: list[OfflineCredentialFailure]

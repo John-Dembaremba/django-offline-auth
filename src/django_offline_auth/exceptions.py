@@ -16,3 +16,19 @@ class UnsupportedProtocolError(OfflineAuthError):
 
 class CredentialGenerationError(OfflineAuthError):
     """Raised when an offline credential cannot be generated."""
+
+
+class OfflineAuthError(Exception):
+    """Base exception for offline authentication."""
+
+
+class UnusablePasswordError(CredentialGenerationError):
+    """User does not have a usable password."""
+
+
+class UnsupportedPasswordAlgorithmError(CredentialGenerationError):
+    """User password algorithm is not supported."""
+
+
+class InvalidPasswordVerifierError(CredentialGenerationError):
+    """User password verifier is invalid."""

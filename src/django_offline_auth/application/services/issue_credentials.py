@@ -7,9 +7,20 @@ from django_offline_auth.application.interfaces.credential_provider import (
 from django_offline_auth.application.interfaces.envelope_encryptor import (
     EnvelopeEncryptor,
 )
+from django_offline_auth.exceptions import (
+    InvalidPasswordVerifierError,
+    UnsupportedPasswordAlgorithmError,
+    UnusablePasswordError,
+)
 from django_offline_auth.models import OfflineAuth
-from django_offline_auth.protocol.constants import PROTOCOL_VERSION
+from django_offline_auth.protocol.constants import (
+    FAILURE_REASON_INVALID_PASSWORD_VERIFIER,
+    FAILURE_REASON_UNSUPPORTED_PASSWORD_ALGORITHM,
+    FAILURE_REASON_UNUSABLE_PASSWORD,
+    PROTOCOL_VERSION,
+)
 from django_offline_auth.protocol.payloads import (
+    OfflineCredentialFailure,
     OfflineCredentialItem,
     OfflineCredentialPayload,
     OfflineCredentialSnapshot,
@@ -17,7 +28,7 @@ from django_offline_auth.protocol.payloads import (
 
 
 class IssueOfflineCredentials:
-    """Build and encrypt offline credentials for eligible users."""
+    """Build and encrypt offline credentials for eligible users. User that ain`t active are excluded"""
 
     def __init__(
         self,
@@ -38,8 +49,12 @@ class IssueOfflineCredentials:
         expires_at = issued_at + ttl
 
         credentials: list[OfflineCredentialItem] = []
+        failures: list[OfflineCredentialFailure] = []
 
         for user in users:
+            if not user.is_active:
+                continue
+
             offline_auth = OfflineAuth.objects.filter(
                 user=user,
                 is_enabled=True,
@@ -48,7 +63,35 @@ class IssueOfflineCredentials:
             if offline_auth is None:
                 continue
 
-            verifier = self.credential_provider.get_verifier(user)
+            try:
+                verifier = self.credential_provider.get_verifier(user)
+            except UnusablePasswordError:
+                failures.append(
+                    OfflineCredentialFailure(
+                        user_id=str(user.pk),
+                        username=user.get_username(),
+                        reason=FAILURE_REASON_UNUSABLE_PASSWORD,
+                    )
+                )
+                continue
+            except UnsupportedPasswordAlgorithmError:
+                failures.append(
+                    OfflineCredentialFailure(
+                        user_id=str(user.pk),
+                        username=user.get_username(),
+                        reason=(FAILURE_REASON_UNSUPPORTED_PASSWORD_ALGORITHM),
+                    )
+                )
+                continue
+            except InvalidPasswordVerifierError:
+                failures.append(
+                    OfflineCredentialFailure(
+                        user_id=str(user.pk),
+                        username=user.get_username(),
+                        reason=FAILURE_REASON_INVALID_PASSWORD_VERIFIER,
+                    )
+                )
+                continue
 
             payload = OfflineCredentialPayload(
                 protocol_version=PROTOCOL_VERSION,
@@ -76,4 +119,5 @@ class IssueOfflineCredentials:
         return OfflineCredentialSnapshot(
             protocol_version=PROTOCOL_VERSION,
             credentials=credentials,
+            failures=failures,
         )
