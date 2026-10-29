@@ -11,7 +11,7 @@ requires-python = ">=3.13"
 license = { text = "MIT" }
 
 authors = [
-    { name = "John Dembaremba" }
+    { name = "John Dembaremba", email = "johndembaremba97@gmail.com" }
 ]
 
 dependencies = [
