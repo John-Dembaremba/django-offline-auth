@@ -58,3 +58,58 @@ def test_issue_offline_credentials():
 
     serialized = snapshot.model_dump_json()
     assert user.password not in serialized
+
+
+def test_inactive_users_not_issued_credential():
+    User = get_user_model()
+
+    user = User.objects.create_user(
+        username="mary", password="secret123", is_active=False
+    )
+
+    OfflineAuth.objects.create(
+        user=user,
+    )
+
+    snapshot = issue_offline_credentials(
+        users=[user],
+        public_key=generate_public_key(),
+    )
+
+    assert len(snapshot.credentials) == 0
+
+
+def test_snapshot_excludes_inactive_users():
+    User = get_user_model()
+
+    active_user = User.objects.create_user(
+        username="mary",
+        password="secret123",
+        is_active=True,
+    )
+
+    inactive_user = User.objects.create_user(
+        username="john",
+        password="secret123",
+        is_active=False,
+    )
+
+    OfflineAuth.objects.create(
+        user=active_user,
+        is_enabled=True,
+    )
+
+    OfflineAuth.objects.create(
+        user=inactive_user,
+        is_enabled=True,
+    )
+
+    public_key = generate_public_key()
+
+    snapshot = issue_offline_credentials(
+        users=[active_user, inactive_user],
+        public_key=public_key,
+    )
+
+    assert len(snapshot.credentials) == 1
+    assert snapshot.credentials[0].user_id == str(active_user.pk)

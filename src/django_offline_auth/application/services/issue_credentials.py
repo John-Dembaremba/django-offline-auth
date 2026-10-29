@@ -17,7 +17,7 @@ from django_offline_auth.protocol.payloads import (
 
 
 class IssueOfflineCredentials:
-    """Build and encrypt offline credentials for eligible users."""
+    """Build and encrypt offline credentials for eligible users. User that ain`t active are excluded"""
 
     def __init__(
         self,
@@ -46,6 +46,9 @@ class IssueOfflineCredentials:
             ).first()
 
             if offline_auth is None:
+                continue
+
+            if not user.is_active:
                 continue
 
             verifier = self.credential_provider.get_verifier(user)
