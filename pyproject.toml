@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "django-offline-auth"
-version = "0.1.0"
+version = "0.1.1"
 description = "Reusable offline authentication support for Django applications."
 readme = "README.md"
 requires-python = ">=3.13"
@@ -27,6 +27,11 @@ dev = [
     "pytest-cov>=6.0",
     "ruff>=0.16",
 ]
+
+[project.urls]
+Homepage = "https://github.com/John-Dembaremba/django-offline-auth"
+Repository = "https://github.com/John-Dembaremba/django-offline-auth"
+Issues = "https://github.com/John-Dembaremba/django-offline-auth/issues"
 
 [tool.ruff]
 exclude = [
