@@ -6,6 +6,9 @@ from django_offline_auth.application import (
     enable_offline_auth,
     rotate_offline_credentials,
 )
+from django_offline_auth.application.services.manage_offline_auth import (
+    is_enabled_offline_auth,
+)
 from django_offline_auth.models import OfflineAuth
 
 pytestmark = pytest.mark.django_db
@@ -119,3 +122,41 @@ def test_rotate_offline_credentials_increments_version():
     offline_auth = rotate_offline_credentials(user)
 
     assert offline_auth.credential_version == 2
+
+
+def test_is_enabled_offline_auth_returns_false_when_not_created():
+    User = get_user_model()
+
+    user = User.objects.create_user(
+        username="john",
+        password="secret123",
+    )
+
+    assert is_enabled_offline_auth(user) is False
+
+
+def test_is_enabled_offline_auth_returns_true_when_enabled():
+    User = get_user_model()
+
+    user = User.objects.create_user(
+        username="john",
+        password="secret123",
+    )
+
+    enable_offline_auth(user)
+
+    assert is_enabled_offline_auth(user) is True
+
+
+def test_is_enabled_offline_auth_returns_false_when_disabled():
+    User = get_user_model()
+
+    user = User.objects.create_user(
+        username="john",
+        password="secret123",
+    )
+
+    enable_offline_auth(user)
+    disable_offline_auth(user)
+
+    assert is_enabled_offline_auth(user) is False

@@ -64,3 +64,11 @@ def rotate_offline_credentials(user) -> OfflineAuth:
     )
 
     return offline_auth
+
+
+def is_enabled_offline_auth(user) -> bool:
+    """Return whether offline authentication is enabled for a user."""
+    return OfflineAuth.objects.filter(
+        user=user,
+        is_enabled=True,
+    ).exists()
